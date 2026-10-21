@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gửi Bé Yêu ❤️</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Quicksand & Pacifico -->
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti cho hiệu ứng pháo hoa -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #ffe6ea 0%, #ffe3ed 50%, #ffcbe1 100%);
+            touch-action: manipulation;
+            overflow: hidden;
+        }
+        .font-pacifico {
+            font-family: 'Pacifico', cursive;
+        }
+        
+        /* Hiệu ứng trái tim bay nền */
+        .bg-heart {
+            position: absolute;
+            opacity: 0.25;
+            animation: floatUp linear infinite;
+            pointer-events: none;
+            z-index: 1;
+        }
+        @keyframes floatUp {
+            0% {
+                transform: translateY(105vh) scale(0.5) rotate(0deg);
+                opacity: 0.1;
+            }
+            50% {
+                opacity: 0.35;
+            }
+            100% {
+                transform: translateY(-10vh) scale(1.2) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Nút No mượt mà khi di chuyển */
+        #noBtn {
+            transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            position: relative;
+            z-index: 30;
+            will-change: left, top, transform;
+        }
+
+        /* Card hiệu ứng nảy nhẹ */
+        .cute-card {
+            box-shadow: 0 15px 35px rgba(255, 154, 178, 0.3);
+            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.85);
+            animation: pulseCard 3s infinite ease-in-out;
+        }
+        @keyframes pulseCard {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.015); }
+        }
+
+        /* Modal Pop-up animation */
+        .modal-enter {
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.3) rotate(-5deg); opacity: 0; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex items-center justify-center relative select-none">
+
+    <!-- Trái tim bay nền -->
+    <div id="heartsContainer" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
+
+    <!-- Main Card Container -->
+    <div id="mainCard" class="cute-card w-[90%] max-w-md p-6 md:p-8 rounded-3xl border-4 border-white text-center relative z-20 transition-all duration-500">
+        
+        <!-- Hình Gấu / Sticker Cute -->
+        <div class="relative w-36 h-36 mx-auto mb-4 flex items-center justify-center">
+            <img id="cuteGif" src="https://media.giphy.com/media/LpDmM2w9a4892/giphy.gif" 
+                 alt="Cute Bear" class="w-full h-full object-contain drop-shadow-md rounded-2xl">
+        </div>
+
+        <!-- Tiêu đề câu hỏi -->
+        <h1 class="text-2xl md:text-3xl font-bold text-pink-600 mb-2 leading-relaxed">
+            Em có yêu anh nhất trên đời không? ❤️
+        </h1>
+        <p class="text-pink-400 text-sm mb-6">Trả lời thật lòng đi nha, không được dối lòng đâu đó! 🥺</p>
+
+        <!-- Khung chứa các nút bấm nằm ngang song song -->
+        <div id="btnGroup" class="w-full flex flex-row items-center justify-center gap-4 py-2 relative">
+            
+            <!-- Nút YES -->
+            <button id="yesBtn" onclick="handleYesClick()" 
+                class="px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold text-base md:text-lg rounded-full shadow-lg transform active:scale-95 hover:scale-105 transition-all duration-200 border-2 border-white flex items-center justify-center gap-1 shrink-0">
+                <span>Có chứ! 💕</span>
+            </button>
+
+            <!-- Nút NO (Ban đầu nằm song song, chỉ bay khi chạm/hover) -->
+            <button id="noBtn" 
+                class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold text-base rounded-full shadow-md border-2 border-white transition-transform duration-200 shrink-0">
+                Không nha 😜
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Popup khi bấm CÓ -->
+    <div id="successModal" class="fixed inset-0 bg-pink-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="modal-enter cute-card w-[90%] max-w-sm p-6 rounded-3xl text-center border-4 border-white relative">
+            <div class="w-32 h-32 mx-auto mb-3">
+                <img src="https://media.giphy.com/media/MDJ9IbxxvDUQM/giphy.gif" alt="Happy Cat" class="w-full h-full object-contain rounded-2xl">
+            </div>
+            <h2 class="text-2xl font-bold text-pink-600 mb-2 font-pacifico">Hihi biết ngay mà! 🥰</h2>
+            <p class="text-gray-700 text-base font-medium mb-6">
+                Anh cũng yêu em nhất trên đời này luôn! 😘❤️<br>
+                <span class="text-xs text-pink-400 mt-2 block">(Hợp đồng tình yêu này đã có hiệu lực vĩnh viễn!)</span>
+            </p>
+            
+            <!-- Nút Đóng Popup -->
+            <button onclick="resetApp()" 
+                class="px-6 py-2.5 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-full shadow-md transform active:scale-95 transition">
+                Thơm Anh Một Cái 💋
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const noBtn = document.getElementById('noBtn');
+        const btnGroup = document.getElementById('btnGroup');
+        const heartsContainer = document.getElementById('heartsContainer');
+
+        // Tạo nhạc nền chúc mừng bằng Web Audio API (không dùng file MP3 ngoài)
+        function playVictoryMelody() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+                
+                // Giai điệu ngọt ngào nhẹ nhàng
+                const notes = [
+                    { f: 523.25, d: 0.2 }, // C5
+                    { f: 659.25, d: 0.2 }, // E5
+                    { f: 783.99, d: 0.2 }, // G5
+                    { f: 1046.50, d: 0.5 } // C6
+                ];
+
+                let now = ctx.currentTime;
+                notes.forEach((note) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    
+                    osc.type = 'sine';
+                    osc.frequency.value = note.f;
+                    
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + note.d);
+                    
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    
+                    osc.start(now);
+                    osc.stop(now + note.d);
+                    now += note.d * 0.8;
+                });
+            } catch(e) {
+                console.log("Audio not supported or blocked");
+            }
+        }
+
+        // Tạo các trái tim bay nhẹ nhàng ở màn hình nền
+        function createBackgroundHearts() {
+            const heartIcons = ['❤️', '💖', '💗', '💕', '🌸', '✨'];
+            for (let i = 0; i < 20; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'bg-heart';
+                heart.innerText = heartIcons[Math.floor(Math.random() * heartIcons.length)];
+                heart.style.left = `${Math.random() * 100}%`;
+                heart.style.animationDuration = `${Math.random() * 5 + 6}s`;
+                heart.style.animationDelay = `${Math.random() * 5}s`;
+                heart.style.fontSize = `${Math.random() * 15 + 15}px`;
+                heartsContainer.appendChild(heart);
+            }
+        }
+
+        // Hàm dịch chuyển nút "Không nha 😜" sang vị trí ngẫu nhiên chầm chậm
+        function moveNoButton() {
+            // Lấy vị trí hiện tại của nút trước khi chuyển sang fixed (nếu là lần đầu)
+            if (noBtn.style.position !== 'fixed') {
+                const rect = noBtn.getBoundingClientRect();
+                noBtn.style.position = 'fixed';
+                noBtn.style.left = `${rect.left}px`;
+                noBtn.style.top = `${rect.top}px`;
+                // Buộc browser tính toán lại vị trí trước khi gán vị trí mới để có transition hiệu lực
+                void noBtn.offsetWidth;
+            }
+
+            // Lấy kích thước màn hình & kích thước thực tế của nút
+            const margin = 20; // Khoảng cách an toàn tối thiểu so với mép màn hình
+            const btnWidth = noBtn.offsetWidth || 120;
+            const btnHeight = noBtn.offsetHeight || 45;
+
+            // Tính toán giới hạn tọa độ tối đa để nút KHÔNG BAO GIỜ lọt ra ngoài màn hình
+            const minX = margin;
+            const maxX = Math.max(margin, window.innerWidth - btnWidth - margin);
+
+            const minY = margin;
+            const maxY = Math.max(margin, window.innerHeight - btnHeight - margin);
+
+            // Tính vị trí ngẫu nhiên nằm gọn hoàn toàn trong khung nhìn
+            let randomX = Math.floor(Math.random() * (maxX - minX)) + minX;
+            let randomY = Math.floor(Math.random() * (maxY - minY)) + minY;
+
+            // Đặt vị trí mới (sẽ chuyển động từ từ nhờ transition 0.8s)
+            noBtn.style.left = `${randomX}px`;
+            noBtn.style.top = `${randomY}px`;
+            
+            // Xoay nhẹ nút mượt mà (góc nhỏ để không bị chồm ra ngoài viền)
+            const randomRotate = (Math.random() - 0.5) * 15;
+            noBtn.style.transform = `rotate(${randomRotate}deg) scale(1.02)`;
+        }
+
+        // Sự kiện né tránh cho Nút "Không nha"
+        // 1. Hover/Move chuột gần tới nút trên PC
+        noBtn.addEventListener('mouseenter', moveNoButton);
+        noBtn.addEventListener('mousemove', moveNoButton);
+
+        // 2. Chạm trên màn hình cảm ứng điện thoại
+        noBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Ngăn chặn sự kiện click thực sự
+            moveNoButton();
+        });
+
+        // Click dự phòng nếu lỡ bấm trúng
+        noBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            moveNoButton();
+        });
+
+        // Xử lý khi nhấn nút "Có chứ! 💕"
+        function handleYesClick() {
+            // Phát âm thanh
+            playVictoryMelody();
+
+            // Hiệu ứng pháo hoa Confetti
+            const duration = 3 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+
+            function randomInRange(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            const interval = setInterval(function() {
+                const timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                const particleCount = 50 * (timeLeft / duration);
+
+                // Bắn pháo hoa từ 2 bên mép màn hình
+                confetti(Object.assign({}, defaults, { 
+                    particleCount, 
+                    origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+                    colors: ['#ff69b4', '#ff1493', '#ffc0cb', '#e6e6fa', '#ffd700']
+                }));
+                confetti(Object.assign({}, defaults, { 
+                    particleCount, 
+                    origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+                    colors: ['#ff69b4', '#ff1493', '#ffc0cb', '#e6e6fa', '#ffd700']
+                }));
+            }, 250);
+
+            // Hiện popup ngọt ngào
+            document.getElementById('successModal').classList.remove('hidden');
+        }
+
+        // Đóng Popup và Đặt lại trạng thái ban đầu
+        function resetApp() {
+            document.getElementById('successModal').classList.add('hidden');
+            // Đặt lại nút No về nằm ngang song song ban đầu
+            noBtn.style.position = 'relative';
+            noBtn.style.left = 'auto';
+            noBtn.style.top = 'auto';
+            noBtn.style.transform = 'none';
+        }
+
+        // Khởi tạo hiệu ứng nền khi trang tải xong
+        window.onload = function() {
+            createBackgroundHearts();
+        };
+    </script>
+</body>
+</html>
